@@ -10,6 +10,7 @@ import com.example.seatholdlab.entity.SeatHold;
 import com.example.seatholdlab.entity.SeatStatus;
 import com.example.seatholdlab.repository.FlightSeatRepository;
 import com.example.seatholdlab.repository.SeatHoldRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,9 @@ public class SeatService {
 
     private final FlightSeatRepository flightSeatRepository;
     private final SeatHoldRepository seatHoldRepository;
+
+    @Value("${app.seat-hold.timeout-seconds:30}")
+    private long holdTimeoutSeconds;
 
     public SeatService(
             FlightSeatRepository flightSeatRepository,
@@ -50,7 +54,7 @@ public class SeatService {
         flightSeatRepository.save(seat);
 
         Instant now = Instant.now();
-        Instant expiresAt = now.plusSeconds(60); // 60 seconds hold duration
+        Instant expiresAt = now.plusSeconds(holdTimeoutSeconds); // Configurable hold duration (default 30s)
 
         SeatHold hold = new SeatHold(seat, request.customerName(), now, expiresAt);
         SeatHold savedHold = seatHoldRepository.save(hold);
